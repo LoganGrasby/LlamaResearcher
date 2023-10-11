@@ -11,6 +11,10 @@ crons = ["0 9 * * *"]
 [ai]
 binding = "AI"
 
+[vars]
+userEmail = "youremail@example.com"
+researcherEmail = "The email to send from. Configure this first in the CF admin under Email Routing"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "researcher"
@@ -19,4 +23,4 @@ database_id = "your database id"
 [[send_email]]
 type = "send_email"
 name = "EMAIL"
-destination_address = "your email"
+destination_address = "youremail@example.com"

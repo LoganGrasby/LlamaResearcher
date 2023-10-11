@@ -24,7 +24,7 @@ export default {
     ctx.waitUntil(await generateResearchEmail(env));
   },
   async email(message, env, ctx) {
-    const allowList = ["logangrasby@gmail.com"];    
+    const allowList = [env.userEmail];    
     if (allowList.indexOf(message.from) == -1) {
       message.setReject("Address not allowed");
     } else {
@@ -68,8 +68,8 @@ async function getRandomTopicFromDB(db) {
 
 async function sendConfirmation(response, env) {
   const msg = createMimeMessage();
-  msg.setSender({ name: "Research Agent", addr: "researcher@shopagent.ai" });
-  msg.setRecipient("logangrasby@gmail.com");
+  msg.setSender({ name: "Research Agent", addr: env.researcherEmail });
+  msg.setRecipient(env.userEmail);
   msg.setSubject("New Research Topics");
 
   msg.addMessage({
@@ -78,8 +78,8 @@ async function sendConfirmation(response, env) {
   });
 
   const message = new EmailMessage(
-    "researcher@shopagent.ai",
-    "logangrasby@gmail.com",
+    env.researcherEmail,
+    env.userEmail,
     msg.asRaw()
   );
 
@@ -93,8 +93,8 @@ async function sendConfirmation(response, env) {
 
 async function sendEmail(topic, content, env) {
   const msg = createMimeMessage();
-  msg.setSender({ name: "Research Agent", addr: "researcher@shopagent.ai" });
-  msg.setRecipient("logangrasby@gmail.com");
+  msg.setSender({ name: "Research Agent", addr: env.researcherEmail });
+  msg.setRecipient(env.userEmail);
   msg.setSubject(`I've found some papers on ${topic} you might be interested in!`);
 
   const emailHtmlContent = `
@@ -124,8 +124,8 @@ async function sendEmail(topic, content, env) {
   });
 
   const message = new EmailMessage(
-    "researcher@shopagent.ai",
-    "logangrasby@gmail.com",
+    env.researcherEmail,
+    env.userEmail,
     msg.asRaw()
   );
 
