@@ -5,7 +5,13 @@ A demo of a personal research assistant using Cloudflare's Workers AI Llama-2 7b
 1. You first send an email to the worker (using Workers email routing) explaining topics you are interested in learning about. Llama converts the message to formatted topic labels and stores them in D1.
 2. A cron trigger causes a random topic to be retrieved. That topic is converted by the model to several queries which are ultimately used to retrieve research papers from [arXiv](https://arxiv.org/).
 3. Each paper is summarized to be easier to understand (a step that probably is not needed for this API specifically, but possibly useful for other search APIs), formatted and then emailed to you with links to each paper.
-   
+
+## Get Started
+You'll need a Cloudflare account and a domain which is on Cloudflare to get started. This should work on the free plan(?)
+`git clone https://github.com/LoganGrasby/LlamaResearcher.git`
+`cd LlamaResearcher`
+`npm i wrangler -g` (Ensure the latest version of wrangler is installed)
+`npm i` (Install dependencies)
 
 ## Configuration
 
