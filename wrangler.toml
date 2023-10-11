@@ -1,0 +1,22 @@
+name = "llamademo"
+main = "src/index.js"
+compatibility_date = "2023-10-07"
+usage_model = "unbound"
+env = { }
+
+[triggers]
+# daily at 9am
+crons = ["0 9 * * *"]
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "researcher"
+database_id = "your database id"
+
+[[send_email]]
+type = "send_email"
+name = "EMAIL"
+destination_address = "your email"
