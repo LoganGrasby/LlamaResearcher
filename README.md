@@ -8,9 +8,13 @@ A demo of a personal research assistant using Cloudflare's Workers AI Llama-2 7b
 
 ## Get Started
 You'll need a Cloudflare account and a domain which is on Cloudflare to get started. This should work on the free plan(?)
+
 `git clone https://github.com/LoganGrasby/LlamaResearcher.git`
+
 `cd LlamaResearcher`
+
 `npm i wrangler -g` (Ensure the latest version of wrangler is installed)
+
 `npm i` (Install dependencies)
 
 ## Configuration
