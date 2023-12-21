@@ -1,4 +1,4 @@
-import { Ai } from './vendor/@cloudflare/ai';
+import { Ai } from '@cloudflare/ai';
 import { EmailMessage } from "cloudflare:email";
 import { createMimeMessage } from "mimetext"
 import cheerio from "cheerio"
