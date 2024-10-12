@@ -1,8 +1,7 @@
 name = "llamademo"
 main = "src/index.js"
-compatibility_date = "2023-10-07"
-usage_model = "unbound"
-env = { }
+compatibility_date = "2024-10-07"
+compatibility_flags = ["nodejs_compat"]
 
 [triggers]
 # daily at 9am
@@ -21,6 +20,5 @@ database_name = "researcher"
 database_id = "your database id"
 
 [[send_email]]
-type = "send_email"
 name = "EMAIL"
 destination_address = "youremail@example.com"

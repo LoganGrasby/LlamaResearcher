@@ -1,7 +1,6 @@
-import { Ai } from '@cloudflare/ai';
 import { EmailMessage } from "cloudflare:email";
-import { createMimeMessage } from "mimetext"
-import cheerio from "cheerio"
+import { createMimeMessage } from "mimetext";
+import * as cheerio from "cheerio";
 const PostalMime = require("postal-mime");
 
 async function streamToArrayBuffer(stream, streamSize) {
@@ -24,7 +23,7 @@ export default {
     ctx.waitUntil(await generateResearchEmail(env));
   },
   async email(message, env, ctx) {
-    const allowList = [env.userEmail];    
+    const allowList = [env.userEmail];
     if (allowList.indexOf(message.from) == -1) {
       message.setReject("Address not allowed");
     } else {
@@ -32,13 +31,13 @@ export default {
       const parser = new PostalMime.default();
       const parsedEmail = await parser.parse(rawEmail);
       const topics = parsedEmail.text;
-      const storageAgent = new StorageAgent(env)
-      const response = await storageAgent.store(topics)
+      const storageAgent = new StorageAgent(env);
+      const response = await storageAgent.store(topics);
 
-      return await sendConfirmation(response, env); 
+      return await sendConfirmation(response, env);
     }
-  }
-}
+  },
+};
 
 async function generateResearchEmail(env) {
   const topic = await getRandomTopicFromDB(env.DB);
@@ -51,18 +50,18 @@ async function generateResearchEmail(env) {
   const agent = new ResearchAgent(env);
   const content = await agent.respond(topic);
 
-  await sendEmail(topic, content, env); 
+  await sendEmail(topic, content, env);
 }
 
 async function getRandomTopicFromDB(db) {
   const query = "SELECT topic FROM topics ORDER BY RANDOM() LIMIT 1";
-  
+
   const { results } = await db.prepare(query).run();
 
   if (results && results.length) {
     return results[0].topic;
   }
-  
+
   return null;
 }
 
@@ -73,14 +72,14 @@ async function sendConfirmation(response, env) {
   msg.setSubject("New Research Topics");
 
   msg.addMessage({
-    contentType: 'text/html',
-    data: response
+    contentType: "text/html",
+    data: response,
   });
 
   const message = new EmailMessage(
     env.researcherEmail,
     env.userEmail,
-    msg.asRaw()
+    msg.asRaw(),
   );
 
   try {
@@ -90,12 +89,13 @@ async function sendConfirmation(response, env) {
   }
 }
 
-
 async function sendEmail(topic, content, env) {
   const msg = createMimeMessage();
   msg.setSender({ name: "Research Agent", addr: env.researcherEmail });
   msg.setRecipient(env.userEmail);
-  msg.setSubject(`I've found some papers on ${topic} you might be interested in!`);
+  msg.setSubject(
+    `I've found some papers on ${topic} you might be interested in!`,
+  );
 
   const emailHtmlContent = `
     <html>
@@ -119,14 +119,14 @@ async function sendEmail(topic, content, env) {
   `;
 
   msg.addMessage({
-    contentType: 'text/html',
-    data: emailHtmlContent
+    contentType: "text/html",
+    data: emailHtmlContent,
   });
 
   const message = new EmailMessage(
     env.researcherEmail,
     env.userEmail,
-    msg.asRaw()
+    msg.asRaw(),
   );
 
   try {
@@ -137,27 +137,29 @@ async function sendEmail(topic, content, env) {
 }
 
 async function callArxivAPI(query) {
-  console.log(query)
-  const response = await fetch(`http://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(query)}&start=0&max_results=1`);
-  
+  console.log(query);
+  const response = await fetch(
+    `http://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(query)}&start=0&max_results=1`,
+  );
+
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  
-  const xmlData = await response.text(); 
+
+  const xmlData = await response.text();
   const $ = cheerio.load(xmlData, { xmlMode: true });
 
   const papers = [];
 
-  $('entry').each(function() {
-    const id = $(this).find('id').text().replace('http://arxiv.org/abs/', '');
-    const title = $(this).find('title').text().trim();
-    const summary = $(this).find('summary').text().trim();
+  $("entry").each(function () {
+    const id = $(this).find("id").text().replace("http://arxiv.org/abs/", "");
+    const title = $(this).find("title").text().trim();
+    const summary = $(this).find("summary").text().trim();
 
     papers.push({
       id: id,
       title: title,
-      summary: summary
+      summary: summary,
     });
   });
   return papers;
@@ -166,27 +168,28 @@ async function callArxivAPI(query) {
 class StorageAgent {
   constructor(env) {
     this.env = env;
-    this.ai = new Ai(env.AI);
     this.systemPrompt = `Which research topics are of interest to this user given their message? Start each topic with TOPIC:`;
   }
 
   async store(message) {
-    const { response: topics } = await this.ai.run(
-      '@cf/meta/llama-2-7b-chat-int8',
+    const { response: topics } = await this.env.AI.run(
+      "@cf/meta/llama-3.1-8b-instruct-awq",
       {
         messages: [
-          { role: 'system', content: this.systemPrompt },
-          { role: 'user', content: message }
-        ]
-      }
-    )
+          { role: "system", content: this.systemPrompt },
+          { role: "user", content: message },
+        ],
+      },
+    );
     const extractedTopics = topics
-      .split('TOPIC:')
-      .slice(1)  
-      .map(topicPart => topicPart.split('\n')[0]?.trim());
+      .split("TOPIC:")
+      .slice(1)
+      .map((topicPart) => topicPart.split("\n")[0]?.trim());
 
     for (const topic of extractedTopics) {
-      const { results } = await this.env.DB.prepare("INSERT INTO topics (topic) VALUES (?) RETURNING *")
+      const { results } = await this.env.DB.prepare(
+        "INSERT INTO topics (topic) VALUES (?) RETURNING *",
+      )
         .bind(topic)
         .run();
     }
@@ -197,7 +200,6 @@ class StorageAgent {
 class ResearchAgent {
   constructor(env) {
     this.env = env;
-    this.ai = new Ai(env.AI);
     this.systemPrompt = `Write a short summary that makes this paper easy to understand for the reader.`;
     this.researcher = new Researcher(env);
   }
@@ -210,28 +212,35 @@ class ResearchAgent {
 
     let searchResults = [];
     for (const query of queriesToProcess) {
-        const result = await callArxivAPI(query);
-        searchResults.push(...result);
+      const result = await callArxivAPI(query);
+      searchResults.push(...result);
     }
 
     //Get Llama to simplify. Perhaps unnecessary if you're smart?
     let summaries = [];
     for (const paper of searchResults) {
-        const conversation = [
-            { role: 'system', content: this.systemPrompt },
-            { role: 'user', content: paper.summary }
-        ];
-        const { response: aiSummary } = await this.ai.run('@cf/meta/llama-2-7b-chat-int8', { messages: conversation });
-        summaries.push(aiSummary);
-    } 
+      const conversation = [
+        { role: "system", content: this.systemPrompt },
+        { role: "user", content: paper.summary },
+      ];
+      const { response: aiSummary } = await this.env.AI.run(
+        "@cf/meta/llama-3.1-8b-instruct-awq",
+        { messages: conversation },
+      );
+      summaries.push(aiSummary);
+    }
 
-    const formattedPapers = searchResults.map((paper, index) => `
+    const formattedPapers = searchResults
+      .map(
+        (paper, index) => `
         <div class="paper">
             <h2 class="paper-title">${paper.title}</h2>
             <p class="paper-id"><a href="http://arxiv.org/abs/${paper.id}" target="_blank">${paper.id}</a></p>
             <p class="paper-summary">${summaries[index]}</p>
         </div>
-    `).join('');
+    `,
+      )
+      .join("");
 
     return formattedPapers;
   }
@@ -241,31 +250,28 @@ class Researcher {
   constructor(env) {
     this.env = env;
     this.systemPrompt = `Prepare short search queries based on the topic that the customer is interested in. Format each query as QUERY:`;
-    this.ai = new Ai(env.AI);
   }
 
   async generateQueries(message) {
-    const { response: queries } = await this.ai.run(
-      '@cf/meta/llama-2-7b-chat-int8',
+    const { response: queries } = await this.env.AI.run(
+      "@cf/meta/llama-3.1-8b-instruct-awq",
       {
         messages: [
-          { role: 'system', content: this.systemPrompt },
-          { role: 'user', content: message }
-        ]
-      }
+          { role: "system", content: this.systemPrompt },
+          { role: "user", content: message },
+        ],
+      },
     );
     return queries
-      .split('QUERY:')
+      .split("QUERY:")
       .slice(1)
-      .map(queryPart => {
-        const query = queryPart.split('\n')[0]?.trim();
+      .map((queryPart) => {
+        const query = queryPart.split("\n")[0]?.trim();
         // Remove trailing question mark if it exists
-        if (query.endsWith('?')) {
+        if (query.endsWith("?")) {
           return query.slice(0, -1);
         }
         return query;
       });
   }
 }
-
-
